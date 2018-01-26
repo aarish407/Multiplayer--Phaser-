@@ -4,6 +4,8 @@
   "description": "Multiplayer phaser with eureca.io",
   "main": "server.js",
   "dependencies": {
+    "engine.io": "^3.1.4",
+    "eureca.io": "^0.7.1",
     "express": "^4.16.2"
   },
   "devDependencies": {},

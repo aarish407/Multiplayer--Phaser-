@@ -80,21 +80,25 @@ Tank = function (index, game, player) {
 		left:false,
 		right:false,
 		up:false,
-		fire:false		
+		fire:false,
+        mouseX:false,        
+        mouseY:false		
 	}
 
 	this.input = {
 		left:false,
 		right:false,
 		up:false,
-		fire:false
+		fire:false,
+        mouseX:false,     
+        mouseY:false     
 	}
 
     var x = 0;
     var y = 0;
 
     this.game = game;
-    this.health = 30;
+    this.health = 300;
     this.player = player;
     this.bullets = game.add.group();
     this.bullets.enableBody = true;
@@ -137,7 +141,9 @@ Tank.prototype.update = function() {
         this.cursor.left != this.input.left ||
         this.cursor.right != this.input.right ||
         this.cursor.up != this.input.up ||
-        this.cursor.fire != this.input.fire
+        this.cursor.fire != this.input.fire||
+        this.cursor.mouseX != this.input.mouseX||
+        this.cursor.mouseY != this.input.mouseY
     );
     
     
@@ -152,15 +158,16 @@ Tank.prototype.update = function() {
             this.input.y = this.tank.y;
             this.input.angle = this.tank.angle;
             this.input.rot = this.turret.rotation;
-            
+            this.input.mouseX = this.game.input.mousePointer.x;
+            this.input.mouseY = this.game.input.mousePointer.y;
             
             eurecaServer.handleKeys(this.input);
             
         }
     }	
 	
-	
-	
+
+
     if (this.cursor.left)
     {
         this.tank.angle -= 1;
@@ -241,7 +248,7 @@ function preload () {
     
 }
 
-
+var healthBar_1;
 
 function create () {
 
@@ -256,6 +263,20 @@ function create () {
     land.fixedToCamera = true;
     
     tanksList = {};
+
+    var bmd_1 = game.add.bitmapData(300,40);
+    bmd_1.ctx.beginPath();
+    bmd_1.ctx.rect(0,0,300,40);
+    bmd_1.ctx.fillStyle = 'blue';
+    bmd_1.ctx.fill();
+
+    // user1 = "akash";
+    // user2 = "aarish";
+
+    var u1t = game.add.text(-350,-260,'Health: ',{ font:'25px Sans Serif', fill: '#fff'});
+    u1t.anchor.setTo(0,0);
+    healthBar_1 = game.add.sprite(-250,-250,bmd_1);
+    healthBar_1.anchor.y = 0.5;
 	
 	player = new Tank(myId, game, tank);
 	tanksList[myId] = player;
@@ -264,7 +285,10 @@ function create () {
 	tank.x=0;
 	tank.y=0;
 	bullets = player.bullets;
-	shadow = player.shadow;	
+	shadow = player.shadow;
+    // var playerHealth = 50; 	
+    // tanksList[myId].health = playerHealth;  
+    // console.log(player.health);  
 
     //  Explosion pool
     explosions = game.add.group();
@@ -312,7 +336,8 @@ function update () {
 	player.input.fire = game.input.activePointer.isDown;
 	player.input.tx = game.input.x+ game.camera.x;
 	player.input.ty = game.input.y+ game.camera.y;
-	
+    player.input.mouseX = game.input.mousePointer.x;
+    player.input.mouseY = game.input.mousePointer.y;
 	
 	
 	turret.rotation = game.physics.arcade.angleToPointer(turret);	
@@ -331,11 +356,9 @@ function update () {
 			if (!tanksList[j]) continue;
 			if (j!=i) 
 			{
-			
 				var targetTank = tanksList[j].tank;
-				
+				targetTankId = j;
 				game.physics.arcade.overlap(curBullets, targetTank, bulletHitPlayer, null, this);
-			
 			}
 			if (tanksList[j].alive)
 			{
@@ -345,10 +368,21 @@ function update () {
     }
 }
 
+var targetTankId;
+
 function bulletHitPlayer (tank, bullet) {
 
     bullet.kill();
+    tanksList[targetTankId].health-=50;
+    healthBar_1.width-=50;
+    console.log(tanksList[targetTankId].health);
+    if(tanksList[targetTankId].health<=0) 
+    {
+        tanksList[targetTankId].kill();
+        var explosionAnimation = explosions.getFirstExists(false);
+        explosionAnimation.reset(tank.x, tank.y);
+        explosionAnimation.play('kaboom', 30, false, true);
+    }
 }
 
 function render () {}
-
